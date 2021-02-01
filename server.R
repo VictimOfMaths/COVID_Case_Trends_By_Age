@@ -21,6 +21,7 @@ models <- data.cases %>%
   mutate(daysfrom=as.numeric(difftime(date, FitFrom, units = "days"))) %>% 
   group_by(age) %>% 
   do(tidy(lm(log(casesroll+0.5)~daysfrom, .))) %>% 
+  ungroup() %>% 
   select(1:3) %>% 
   spread(term, estimate) %>% 
   rename(intercept=`(Intercept)`, slope=daysfrom)
@@ -63,7 +64,7 @@ p <- plot.data %>%
   scale_x_date(name="")+
   scale_y_continuous(trans="log", name="Daily new cases (log scale)", 
                      labels=number_format(accuracy=1))+
-  theme_classic(base_size=12)+
+  theme_classic(base_size=14)+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
         plot.title=element_text(face="bold", size=rel(1.2)))+
@@ -94,7 +95,7 @@ if (input$plot == "Age-specific"){
     scale_colour_paletteer_d("pals::stepped")+
     scale_fill_paletteer_d("pals::stepped")+
     facet_wrap(~age, scales=scale)+
-    theme_classic(base_size=12)+
+    theme_classic(base_size=14)+
     theme(strip.background=element_blank(),
           strip.text=element_text(face="bold"),
           plot.title=element_text(face="bold", size=rel(1.2)))+
