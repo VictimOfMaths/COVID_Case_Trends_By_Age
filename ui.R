@@ -1,6 +1,8 @@
 library(shiny)
+library(lubridate)
 
 ui <- fluidPage(
+  tags$head(tags$style(HTML('* {font-family: "Lato"};'))),
   
 titlePanel("Visualising age-specific patterns in recent COVID-19 case data"),
 
@@ -15,7 +17,7 @@ sidebarPanel(
   radioButtons('plot', 'Age groups', choices=c("Overall", "Age-specific (detailed)", 
                                                "Age-specific (broad)"), selected="Overall", inline=TRUE),
   sliderInput('FitRange', 'Select data range to fit baseline from', min=min(data.cases$date), 
-              max=max(data.cases$date)-days(1), value=c(as.Date("2021-01-08"), as.Date("2021-01-14"))),
+              max=max(data.cases$date)-days(1), value=c(as.Date("2021-03-01"), as.Date("2021-03-14"))),
   radioButtons('scale', "Fix y-axis scales to be the same for all ages?", choices=c("Yes", "No"), inline=TRUE),
   radioButtons('labels', "Display labels showing difference between baseline and observed?", 
                choices=c("Yes", "No"), inline=TRUE)),

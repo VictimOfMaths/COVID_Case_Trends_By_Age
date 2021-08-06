@@ -2,14 +2,16 @@ library(tidyverse)
 library(shiny)
 library(Cairo)
 
-options(shiny.usecairo=TRUE)
+options(shiny.useragg=TRUE)
+
+load("Alldata.RData")
 
 #Read in case data by age processed by:
 #https://github.com/VictimOfMaths/COVID-19/blob/master/Heatmaps/COVIDPHECasesxAgev2.R
-data.cases <- read.csv("data.csv") %>% 
+data.cases <- data1 %>% 
   select(-c(1)) %>% 
   mutate(date=as.Date(date)) %>% 
-  filter(date>=as.Date("2021-01-01") & date<max(date[!is.na(casesroll)]))
+  filter(date>=as.Date("2021-03-01") & date<=max(date[!is.na(casesroll)]))
 
 #Add total
 data.cases <- data.cases %>% 

@@ -4,7 +4,7 @@ library(paletteer)
 library(broom)
 library(lubridate)
 library(ggtext)
-
+library(extrafont)
 
 server <- function(input, output) {
   
@@ -14,6 +14,7 @@ server <- function(input, output) {
 area <- input$area
 FitFrom <- input$FitRange[1]
 FitTo <- input$FitRange[2]
+labpos <- FitFrom+days(floor(as.double(difftime(max(data.cases$date), FitFrom, units="days"))/5))
 
 #Collapse age groups if necessary
 if(input$plot=="Age-specific (broad)"){
@@ -47,7 +48,12 @@ plot.data <- data.cases %>%
   filter(date>=FitFrom & areaName==area) %>% 
   merge(models) %>% 
   mutate(daysfrom=as.numeric(difftime(date, FitFrom, units = "days")),
-         baseline=exp(intercept+slope*daysfrom))
+         baseline=exp(intercept+slope*daysfrom),
+         age=factor(age, levels=c("0-4", "0-9", "5-9", "10-14", "15-19",
+                                  "20-24", "25-29", "25-40", "30-34", "35-39", 
+                                  "40-44", "40-59", "45-49", "50-54", "55-59", 
+                                  "60-64", "60-69",  "65-69", "70-74","70-79",  "75-79", 
+                                  "80-84", "80+", "85-89", "90+", "Total")))
 
 #Calculate cumulative difference
 plot.labels <- plot.data %>% 
@@ -55,16 +61,17 @@ plot.labels <- plot.data %>%
   group_by(age) %>% 
   summarise(cumdiff=sum(casesroll-baseline, na.rm=TRUE)) %>% 
   ungroup() %>% 
-  mutate(date=as.Date("2021-01-18"))
+  mutate(date=labpos)
 
 #Bring in x values for labels
 plot.labels <- plot.data %>% 
-  filter(date==as.Date("2021-01-18")) %>% 
+  filter(date==labpos) %>% 
   select(age, casesroll, baseline) %>% 
   rowwise() %>% 
   mutate(labpos=case_when(
     input$plot=="Overall" ~ max(casesroll, baseline)*1.2,
     input$scale=="Yes" ~ max(casesroll, baseline)*1.5,
+    age %in% c("0-4", "0-9") ~ max(casesroll, baseline)*1.01, 
     TRUE ~ max(casesroll, baseline)*1.2)) %>% 
   ungroup() %>% 
   merge(plot.labels)
@@ -90,9 +97,10 @@ p <- plot.data %>%
   theme_classic(base_size=14)+
   theme(strip.background=element_blank(),
         strip.text=element_text(face="bold"),
-        plot.title=element_text(face="bold", size=rel(1.2)))+
-  labs(title=paste0("Recent trends in COVID-19 case rates in ", area),
-       subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo),
+        plot.title=element_text(face="bold", size=rel(1.8)),
+        text=element_text(family="Lato"))+
+  labs(title=paste0("Recent trends in COVID-19 case numbers in ", area),
+       subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo, ".\nThe shaded area represents the difference between this baseline and the observed number of cases. "),
        caption="Data from PHE | Plot by @VictimOfMaths")
 
 if(input$labels=="Yes"){
@@ -123,13 +131,14 @@ if (input$plot == "Age-specific (detailed)"){
                        labels=number_format(accuracy=1))+
     scale_colour_paletteer_d("pals::stepped")+
     scale_fill_paletteer_d("pals::stepped")+
-    facet_wrap(~age, scales=scale)+
+    facet_wrap(~age, scales=scale, ncol=4)+
     theme_classic(base_size=14)+
     theme(strip.background=element_blank(),
           strip.text=element_text(face="bold"),
-          plot.title=element_text(face="bold", size=rel(1.2)))+
-    labs(title=paste0("Age-specific trends in COVID-19 case rates in ", area),
-         subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo),
+          plot.title=element_text(face="bold", size=rel(1.8)),
+          text=element_text(family="Lato"))+
+    labs(title=paste0("Age-specific trends in COVID-19 case numbers in ", area),
+         subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo, ".\nThe shaded area represents the difference between this baseline and the observed number of cases. "),
          caption="Data from PHE | Plot by @VictimOfMaths")
   
   if(input$labels=="Yes"){
@@ -163,9 +172,10 @@ if (input$plot == "Age-specific (broad)"){
     theme_classic(base_size=14)+
     theme(strip.background=element_blank(),
           strip.text=element_text(face="bold"),
-          plot.title=element_text(face="bold", size=rel(1.2)))+
-    labs(title=paste0("Age-specific trends in COVID-19 case rates in ", area),
-         subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo),
+          plot.title=element_text(face="bold", size=rel(1.8)),
+          text=element_text(family="Lato"))+
+    labs(title=paste0("Age-specific trends in COVID-19 case numbers in ", area),
+         subtitle=paste0("Rolling 7-day average of new COVID-19 cases identified, plotted on a log scale\nBaseline calculated assuming a constant relative reduction in cases, based on data from ", FitFrom, " to ", FitTo, ".\nThe shaded area represents the difference between this baseline and the observed number of cases. "),
          caption="Data from PHE | Plot by @VictimOfMaths")
   
   if(input$labels=="Yes"){
